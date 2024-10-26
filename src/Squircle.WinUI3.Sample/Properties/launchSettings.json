@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Squircle.WinUI3.Sample (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Squircle.WinUI3.Sample (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

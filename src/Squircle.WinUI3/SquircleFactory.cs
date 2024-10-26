@@ -89,13 +89,6 @@ public static class SquircleFactory
         in CornerPathParams bottomLeftPathParams,
         in CornerPathParams bottomRightPathParams)
     {
-        System.Diagnostics.Debug.WriteLine("");
-        System.Diagnostics.Debug.WriteLine("---------");
-        System.Diagnostics.Debug.WriteLine($"topLeftPathParams = {topLeftPathParams}");
-        System.Diagnostics.Debug.WriteLine($"topRightPathParams = {topRightPathParams}");
-        System.Diagnostics.Debug.WriteLine($"bottomLeftPathParams = {bottomLeftPathParams}");
-        System.Diagnostics.Debug.WriteLine($"bottomRightPathParams = {bottomRightPathParams}");
-
         var pathBuilder = new CanvasPathBuilder(resourceCreator);
         pathBuilder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Alternate);
 

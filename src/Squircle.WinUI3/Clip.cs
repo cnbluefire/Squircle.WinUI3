@@ -97,7 +97,7 @@ namespace Squircle.WinUI3
                 var _visual = ElementCompositionPreview.GetElementVisual(_element);
                 var _compositor = _visual.Compositor;
 
-                var _geometry = SquircleFactory.CreateGeometry(null, in _props);
+                using var _geometry = SquircleFactory.CreateGeometry(null, in _props);
                 if (_geometry == null)
                 {
                     if (_visual.Clip is CompositionGeometricClip _clip
@@ -120,6 +120,7 @@ namespace Squircle.WinUI3
                     {
                         _pathGeometry = _compositor.CreatePathGeometry(_path);
                         _clip = _compositor.CreateGeometricClip(_pathGeometry);
+                        _clip.Comment = SquircleClipCommit;
                         _visual.Clip = _clip;
                     }
                 }

@@ -480,57 +480,55 @@ public static class SquircleFactory
         }
     }
 
-
-}
-
-internal static class SvgPathHelper
-{
-    public static void L(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 lineTo)
+    internal static class SvgPathHelper
     {
-        if (isRelative)
+        public static void L(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 lineTo)
         {
-            lineTo.X += currentPoint.X;
-            lineTo.Y += currentPoint.Y;
+            if (isRelative)
+            {
+                lineTo.X += currentPoint.X;
+                lineTo.Y += currentPoint.Y;
+            }
+
+            canvasPathBuilder.AddLine(lineTo);
+            currentPoint = lineTo;
         }
 
-        canvasPathBuilder.AddLine(lineTo);
-        currentPoint = lineTo;
-    }
-
-    public static void C(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 controlPoint1, Vector2 controlPoint2, Vector2 endPoint)
-    {
-        if (isRelative)
+        public static void C(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 controlPoint1, Vector2 controlPoint2, Vector2 endPoint)
         {
-            controlPoint1.X += currentPoint.X;
-            controlPoint1.Y += currentPoint.Y;
+            if (isRelative)
+            {
+                controlPoint1.X += currentPoint.X;
+                controlPoint1.Y += currentPoint.Y;
 
-            controlPoint2.X += currentPoint.X;
-            controlPoint2.Y += currentPoint.Y;
+                controlPoint2.X += currentPoint.X;
+                controlPoint2.Y += currentPoint.Y;
 
-            endPoint.X += currentPoint.X;
-            endPoint.Y += currentPoint.Y;
+                endPoint.X += currentPoint.X;
+                endPoint.Y += currentPoint.Y;
+            }
+
+            canvasPathBuilder.AddCubicBezier(controlPoint1, controlPoint2, endPoint);
+            currentPoint = endPoint;
         }
 
-        canvasPathBuilder.AddCubicBezier(controlPoint1, controlPoint2, endPoint);
-        currentPoint = endPoint;
-    }
-
-    public static void A(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, double radiusX, double radiusY, double angle, bool isLargeFlag, bool sweepDirectionClockwise, Vector2 endPoint)
-    {
-        if (isRelative)
+        public static void A(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, double radiusX, double radiusY, double angle, bool isLargeFlag, bool sweepDirectionClockwise, Vector2 endPoint)
         {
-            endPoint.X += currentPoint.X;
-            endPoint.Y += currentPoint.Y;
+            if (isRelative)
+            {
+                endPoint.X += currentPoint.X;
+                endPoint.Y += currentPoint.Y;
+            }
+
+            canvasPathBuilder.AddArc(
+                endPoint,
+                (float)radiusX,
+                (float)radiusY,
+                (float)angle,
+                sweepDirectionClockwise ? CanvasSweepDirection.Clockwise : CanvasSweepDirection.CounterClockwise,
+                isLargeFlag ? CanvasArcSize.Large : CanvasArcSize.Small);
+
+            currentPoint = endPoint;
         }
-
-        canvasPathBuilder.AddArc(
-            endPoint,
-            (float)radiusX,
-            (float)radiusY,
-            (float)angle,
-            sweepDirectionClockwise ? CanvasSweepDirection.Clockwise : CanvasSweepDirection.CounterClockwise,
-            isLargeFlag ? CanvasArcSize.Large : CanvasArcSize.Small);
-
-        currentPoint = endPoint;
     }
 }

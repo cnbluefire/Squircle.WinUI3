@@ -11,8 +11,8 @@
     Title="Squircle.WinUI3.Sample">
 
     <ScrollViewer>
-        <StackPanel Spacing="20">
-            <Grid Margin="0,20" HorizontalAlignment="Center">
+        <StackPanel Spacing="20" Padding="12,20">
+            <Grid HorizontalAlignment="Left">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -32,6 +32,8 @@
                 </Grid>
 
                 <StackPanel Orientation="Vertical" Margin="20,0,0,0" Spacing="20" Grid.Column="1" VerticalAlignment="Center">
+                    <Button x:Name="ResetButton" Content="Reset" Click="ResetButton_Click" HorizontalAlignment="Left" Grid.Column="1"/>
+
                     <CheckBox x:Name="Checkbox_Border1Visible" Content="Rounded Square" IsChecked="True" Click="Checkbox_BorderVisible_Click">
                         <CheckBox.Resources>
                             <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked">#eb5757</SolidColorBrush>
@@ -67,73 +69,40 @@
                 </StackPanel>
             </Grid>
 
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Corner Smoothing" />
+                <Slider x:Name="Slider_CornerSmoothing" Value="0.8" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1" StepFrequency="0.01" MinWidth="200" />
+            </StackPanel>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Width" />
+                <Slider x:Name="Slider_Width" Value="150" Minimum="50" Maximum="300" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" />
+            </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Corner Smoothing" />
-                    <Slider x:Name="Slider_CornerSmoothing" Value="0.8" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1" StepFrequency="0.01" MinWidth="200" />
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Height" />
+                <Slider x:Name="Slider_Height" Value="150" Minimum="50" Maximum="300" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" />
+            </StackPanel>
 
-                <Button x:Name="ResetButton" Content="Reset" Click="ResetButton_Click" HorizontalAlignment="Left" Grid.Column="1"/>
-            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Top Left Corner Radius" />
+                <Slider x:Name="Slider_TopLeftCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
+            </StackPanel>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Top Right Corner Radius" />
+                <Slider x:Name="Slider_TopRightCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
+            </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Width" />
-                    <Slider x:Name="Slider_Width" Value="150" Minimum="50" Maximum="300" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" />
-                </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Bottom Left Corner Radius" />
+                <Slider x:Name="Slider_BottomLeftCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
+            </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="12" Grid.Column="1">
-                    <Slider x:Name="Slider_Height" Value="150" Minimum="50" Maximum="300" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" />
-                    <TextBlock MinWidth="200" TextAlignment="Left" VerticalAlignment="Center" Text="Height" />
-                </StackPanel>
-            </Grid>
-
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Top Left Corner Radius" />
-                    <Slider x:Name="Slider_TopLeftCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Spacing="12" Grid.Column="1">
-                    <Slider x:Name="Slider_TopRightCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
-                    <TextBlock MinWidth="200" TextAlignment="Left" VerticalAlignment="Center" Text="Top Right Corner Radius" />
-                </StackPanel>
-            </Grid>
-
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Bottom Left Corner Radius" />
-                    <Slider x:Name="Slider_BottomLeftCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Spacing="12" Grid.Column="1">
-                    <Slider x:Name="Slider_BottomRightCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
-                    <TextBlock MinWidth="200" TextAlignment="Left" VerticalAlignment="Center" Text="Bottom Right Corner Radius" />
-                </StackPanel>
-            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock MinWidth="200" TextAlignment="Right" VerticalAlignment="Center" Text="Bottom Right Corner Radius" />
+                <Slider x:Name="Slider_BottomRightCornerRadius" Value="24" Minimum="0" Maximum="200" SmallChange="0.1" LargeChange="10" StepFrequency="0.1" MinWidth="200" ValueChanged="CornerRadiusSlider_ValueChanged" />
+            </StackPanel>
 
 
         </StackPanel>

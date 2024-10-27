@@ -1,33 +1,30 @@
-﻿using Microsoft.UI.Composition;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Hosting;
-using Squircle.Core;
+﻿using Squircle.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
-namespace Squircle.WinUI3
+namespace Squircle.Wpf
 {
     public static class Clip
     {
-        private readonly static object BoxedCornerRadius = new Microsoft.UI.Xaml.CornerRadius(0);
+        private readonly static object BoxedCornerRadius = new System.Windows.CornerRadius(0);
         private readonly static object BoxedDouble = 0d;
 
-        public static Microsoft.UI.Xaml.CornerRadius GetCornerRadius(FrameworkElement obj)
+        public static System.Windows.CornerRadius GetCornerRadius(FrameworkElement obj)
         {
-            return (Microsoft.UI.Xaml.CornerRadius)obj.GetValue(CornerRadiusProperty);
+            return (System.Windows.CornerRadius)obj.GetValue(CornerRadiusProperty);
         }
 
-        public static void SetCornerRadius(FrameworkElement obj, Microsoft.UI.Xaml.CornerRadius value)
+        public static void SetCornerRadius(FrameworkElement obj, System.Windows.CornerRadius value)
         {
             obj.SetValue(CornerRadiusProperty, value);
         }
 
         public static readonly DependencyProperty CornerRadiusProperty =
-            DependencyProperty.RegisterAttached("CornerRadius", typeof(Microsoft.UI.Xaml.CornerRadius), typeof(Clip), new PropertyMetadata(BoxedCornerRadius, OnPropertyChanged));
+            DependencyProperty.RegisterAttached("CornerRadius", typeof(System.Windows.CornerRadius), typeof(Clip), new PropertyMetadata(BoxedCornerRadius, OnPropertyChanged));
 
 
 
@@ -91,40 +88,10 @@ namespace Squircle.WinUI3
 
             static void UpdateElementCorner(FrameworkElement? _element, in SquircleProperties _props)
             {
-                const string SquircleClipCommit = "_SQUIRCLE_CLIP";
-
                 if (_element == null) return;
 
-                var _visual = ElementCompositionPreview.GetElementVisual(_element);
-                var _compositor = _visual.Compositor;
-
-                var _pathBuilder = SquircleFactory.CreateGeometry(in _props, () => new CompositionPathBuilder());
-                var _path = _pathBuilder?.CreateGeometry();
-                if (_path == null)
-                {
-                    if (_visual.Clip is CompositionGeometricClip _clip
-                        && _visual.Clip.Comment == SquircleClipCommit
-                        && _clip.Geometry is CompositionPathGeometry _pathGeometry)
-                    {
-                        _pathGeometry.Path = null;
-                    }
-                }
-                else
-                {
-                    if (_visual.Clip is CompositionGeometricClip _clip
-                        && _visual.Clip.Comment == SquircleClipCommit
-                        && _clip.Geometry is CompositionPathGeometry _pathGeometry)
-                    {
-                        _pathGeometry.Path = _path;
-                    }
-                    else
-                    {
-                        _pathGeometry = _compositor.CreatePathGeometry(_path);
-                        _clip = _compositor.CreateGeometricClip(_pathGeometry);
-                        _clip.Comment = SquircleClipCommit;
-                        _visual.Clip = _clip;
-                    }
-                }
+                var _pathBuilder = SquircleFactory.CreateGeometry(in _props, () => new WpfPathBuilder());
+                _element.Clip = _pathBuilder?.CreateGeometry(false);
             }
         }
 

@@ -1,15 +1,11 @@
-﻿using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Geometry;
-using Microsoft.UI.Composition;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Windows.ApplicationModel.Payments;
 
-namespace Squircle.WinUI3;
+namespace Squircle.Core;
+
+public record struct CornerRadius(double TopLeft, double TopRight, double BottomRight, double BottomLeft);
 
 public record struct SquircleProperties(
     double Width,
@@ -18,15 +14,16 @@ public record struct SquircleProperties(
     double CornerSmoothing,
     bool PreserveSmoothing);
 
-
 /// <summary>
 /// <see href="https://github.com/phamfoo/figma-squircle"/>
 /// </summary>
 public static class SquircleFactory
 {
-    public static CanvasGeometry? CreateGeometry(ICanvasResourceCreator? resourceCreator, in SquircleProperties props)
+    public static T? CreateGeometry<T>(in SquircleProperties props, Func<T?> pathBuilderFactory) where T : PathBuilder
     {
         if (!IsValidProperties(in props, true)) return null;
+        var pathBuilder = pathBuilderFactory.Invoke();
+        if (pathBuilder == null) return null;
 
         var cornerSmoothing = props.CornerSmoothing;
         if (cornerSmoothing < 0) cornerSmoothing = 0;
@@ -43,19 +40,22 @@ public static class SquircleFactory
                 props.PreserveSmoothing,
                 roundingAndSmoothingBudget);
 
-            return CreateGeometryFromParams(
-                resourceCreator,
+
+            CreateGeometryFromParams(
+                pathBuilder,
                 props.Width,
                 props.Height,
                 in pathParams,
                 in pathParams,
                 in pathParams,
                 in pathParams);
+
+            return pathBuilder;
         }
 
         var map = DistributeAndNormalize(props.Width, props.Height, props.CornerRadius);
-        return CreateGeometryFromParams(
-            resourceCreator,
+        CreateGeometryFromParams(
+            pathBuilder,
             props.Width,
             props.Height,
             topLeftPathParams: GetPathParamsForCorner(
@@ -78,10 +78,12 @@ public static class SquircleFactory
                 props.CornerSmoothing,
                 props.PreserveSmoothing,
                 map[Adjacent.CornerType.BottomRight].RoundingAndSmoothingBudget));
+
+        return pathBuilder;
     }
 
-    private static CanvasGeometry CreateGeometryFromParams(
-        ICanvasResourceCreator? resourceCreator,
+    private static void CreateGeometryFromParams(
+        PathBuilder pathBuilder,
         double width,
         double height,
         in CornerPathParams topLeftPathParams,
@@ -89,132 +91,131 @@ public static class SquircleFactory
         in CornerPathParams bottomLeftPathParams,
         in CornerPathParams bottomRightPathParams)
     {
-        var pathBuilder = new CanvasPathBuilder(resourceCreator);
-        pathBuilder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Alternate);
+        pathBuilder.MoveTo(false, new Vector2((float)(width - topRightPathParams.p), 0));
 
-        var currentPoint = new Vector2((float)(width - topRightPathParams.p), 0);
+        DrawTopRightPath(pathBuilder, in topRightPathParams);
 
-        pathBuilder.BeginFigure(currentPoint);
+        pathBuilder.LineTo(false, new Vector2((float)width, (float)(height - bottomRightPathParams.p)));
 
-        DrawTopRightPath(pathBuilder, ref currentPoint, in topRightPathParams);
+        DrawBottomRightPath(pathBuilder, in bottomRightPathParams);
 
-        SvgPathHelper.L(pathBuilder, ref currentPoint, false, new Vector2((float)width, (float)(height - bottomRightPathParams.p)));
+        pathBuilder.LineTo(false, new Vector2((float)bottomLeftPathParams.p, (float)height));
 
-        DrawBottomRightPath(pathBuilder, ref currentPoint, in bottomRightPathParams);
+        DrawBottomLeftPath(pathBuilder, in bottomLeftPathParams);
 
-        SvgPathHelper.L(pathBuilder, ref currentPoint, false, new Vector2((float)bottomLeftPathParams.p, (float)height));
+        pathBuilder.LineTo(false, new Vector2(0, (float)topLeftPathParams.p));
 
-        DrawBottomLeftPath(pathBuilder, ref currentPoint, in bottomLeftPathParams);
-
-        SvgPathHelper.L(pathBuilder, ref currentPoint, false, new Vector2(0, (float)topLeftPathParams.p));
-
-        DrawTopLeftPath(pathBuilder, ref currentPoint, in topLeftPathParams);
-
-        pathBuilder.EndFigure(CanvasFigureLoop.Closed);
-
-        return CanvasGeometry.CreatePath(pathBuilder);
+        DrawTopLeftPath(pathBuilder, in topLeftPathParams);
     }
 
-    private static void DrawTopRightPath(CanvasPathBuilder pathBuilder, ref Vector2 currentPoint, in CornerPathParams topRightPathParams)
+    private static void DrawTopRightPath(PathBuilder pathBuilder, in CornerPathParams topRightPathParams)
     {
         var (a, b, c, d, p, cornerRadius, arcSectionLength) = topRightPathParams;
 
         if (cornerRadius > 0)
         {
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2((float)a, 0),
                 new Vector2((float)(a + b), 0),
                 new Vector2((float)(a + b + c), (float)d));
 
-            SvgPathHelper.A(pathBuilder, ref currentPoint, true,
+            pathBuilder.ArcTo(true,
                 cornerRadius, cornerRadius, 0, false, true, new Vector2((float)arcSectionLength, (float)arcSectionLength));
 
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2((float)d, (float)c),
                 new Vector2((float)d, (float)(b + c)),
                 new Vector2((float)d, (float)(a + b + c)));
         }
         else
         {
-            SvgPathHelper.L(pathBuilder, ref currentPoint, true, new Vector2((float)p, 0));
+            pathBuilder.LineTo(true, new Vector2((float)p, 0));
         }
     }
 
 
-    private static void DrawBottomRightPath(CanvasPathBuilder pathBuilder, ref Vector2 currentPoint, in CornerPathParams bottomRightPathParams)
+    private static void DrawBottomRightPath(PathBuilder pathBuilder, in CornerPathParams bottomRightPathParams)
     {
         var (a, b, c, d, p, cornerRadius, arcSectionLength) = bottomRightPathParams;
 
         if (cornerRadius > 0)
         {
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2(0, (float)(a)),
                 new Vector2(0, (float)(a + b)),
                 new Vector2(-(float)d, (float)(a + b + c)));
 
-            SvgPathHelper.A(pathBuilder, ref currentPoint, true,
+            pathBuilder.ArcTo(true,
                 cornerRadius, cornerRadius, 0, false, true, new Vector2(-(float)arcSectionLength, (float)arcSectionLength));
 
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2(-(float)c, (float)d),
                 new Vector2(-(float)(b + c), (float)d),
                 new Vector2(-(float)(a + b + c), (float)d));
         }
         else
         {
-            SvgPathHelper.L(pathBuilder, ref currentPoint, true, new Vector2(0, (float)p));
+            pathBuilder.LineTo(true, new Vector2(0, (float)p));
         }
     }
 
 
-    private static void DrawBottomLeftPath(CanvasPathBuilder pathBuilder, ref Vector2 currentPoint, in CornerPathParams bottomLeftPathParams)
+    private static void DrawBottomLeftPath(PathBuilder pathBuilder, in CornerPathParams bottomLeftPathParams)
     {
         var (a, b, c, d, p, cornerRadius, arcSectionLength) = bottomLeftPathParams;
 
         if (cornerRadius > 0)
         {
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2(-(float)a, 0),
                 new Vector2(-(float)(a + b), 0),
                 new Vector2(-(float)(a + b + c), -(float)d));
 
-            SvgPathHelper.A(pathBuilder, ref currentPoint, true,
+            pathBuilder.ArcTo(true,
                 cornerRadius, cornerRadius, 0, false, true, new Vector2(-(float)arcSectionLength, -(float)arcSectionLength));
 
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2(-(float)d, -(float)c),
                 new Vector2(-(float)d, -(float)(b + c)),
                 new Vector2(-(float)d, -(float)(a + b + c)));
         }
         else
         {
-            SvgPathHelper.L(pathBuilder, ref currentPoint, true, new Vector2(-(float)p, 0));
+            pathBuilder.LineTo(true, new Vector2(-(float)p, 0));
         }
     }
 
 
-    private static void DrawTopLeftPath(CanvasPathBuilder pathBuilder, ref Vector2 currentPoint, in CornerPathParams topLeftPathParams)
+    private static void DrawTopLeftPath(PathBuilder pathBuilder, in CornerPathParams topLeftPathParams)
     {
         var (a, b, c, d, p, cornerRadius, arcSectionLength) = topLeftPathParams;
 
         if (cornerRadius > 0)
         {
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2(0, -(float)(a)),
                 new Vector2(0, -(float)(a + b)),
                 new Vector2((float)d, -(float)(a + b + c)));
 
-            SvgPathHelper.A(pathBuilder, ref currentPoint, true,
+            pathBuilder.ArcTo(true,
                 cornerRadius, cornerRadius, 0, false, true, new Vector2((float)arcSectionLength, -(float)arcSectionLength));
 
-            SvgPathHelper.C(pathBuilder, ref currentPoint, true,
+            pathBuilder.CubicBezierTo(
+                true,
                 new Vector2((float)c, -(float)d),
                 new Vector2((float)(b + c), -(float)d),
                 new Vector2((float)(a + b + c), -(float)d));
         }
         else
         {
-            SvgPathHelper.L(pathBuilder, ref currentPoint, true, new Vector2(0, -(float)p));
+            pathBuilder.LineTo(true, new Vector2(0, -(float)p));
         }
     }
 
@@ -362,7 +363,7 @@ public static class SquircleFactory
     }
 
 
-    internal static bool IsValidProperties(in SquircleProperties props, bool checkSize)
+    public static bool IsValidProperties(in SquircleProperties props, bool checkSize)
     {
         if (checkSize && (props.Width == 0 || props.Height == 0)) return false;
         if (!IsValidCornerRadius(props.CornerRadius)) return false;
@@ -470,58 +471,6 @@ public static class SquircleFactory
         private struct __InlineMap
         {
             (Adjacent.CornerType corner, TValue? value) First;
-        }
-    }
-
-    internal static class SvgPathHelper
-    {
-        public static void L(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 lineTo)
-        {
-            if (isRelative)
-            {
-                lineTo.X += currentPoint.X;
-                lineTo.Y += currentPoint.Y;
-            }
-
-            canvasPathBuilder.AddLine(lineTo);
-            currentPoint = lineTo;
-        }
-
-        public static void C(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, Vector2 controlPoint1, Vector2 controlPoint2, Vector2 endPoint)
-        {
-            if (isRelative)
-            {
-                controlPoint1.X += currentPoint.X;
-                controlPoint1.Y += currentPoint.Y;
-
-                controlPoint2.X += currentPoint.X;
-                controlPoint2.Y += currentPoint.Y;
-
-                endPoint.X += currentPoint.X;
-                endPoint.Y += currentPoint.Y;
-            }
-
-            canvasPathBuilder.AddCubicBezier(controlPoint1, controlPoint2, endPoint);
-            currentPoint = endPoint;
-        }
-
-        public static void A(CanvasPathBuilder canvasPathBuilder, ref Vector2 currentPoint, bool isRelative, double radiusX, double radiusY, double angle, bool isLargeFlag, bool sweepDirectionClockwise, Vector2 endPoint)
-        {
-            if (isRelative)
-            {
-                endPoint.X += currentPoint.X;
-                endPoint.Y += currentPoint.Y;
-            }
-
-            canvasPathBuilder.AddArc(
-                endPoint,
-                (float)radiusX,
-                (float)radiusY,
-                (float)angle,
-                sweepDirectionClockwise ? CanvasSweepDirection.Clockwise : CanvasSweepDirection.CounterClockwise,
-                isLargeFlag ? CanvasArcSize.Large : CanvasArcSize.Small);
-
-            currentPoint = endPoint;
         }
     }
 }

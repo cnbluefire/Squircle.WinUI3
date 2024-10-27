@@ -51,7 +51,7 @@ namespace Squircle.WinUI3.Sample
                 Slider_BottomLeftCornerRadius.Value);
 
             border1.CornerRadius = cornerRadius;
-            Clip.SetCornerRadius(border2, cornerRadius);
+            Squircle.WinUI3.Clip.SetCornerRadius(border2, cornerRadius);
         }
 
         private void ResetButton_Click(object sender, RoutedEventArgs e)
@@ -63,6 +63,8 @@ namespace Squircle.WinUI3.Sample
             Slider_BottomLeftCornerRadius.Value = 24;
             Slider_BottomRightCornerRadius.Value = 24;
             Slider_CornerSmoothing.Value = 0.8;
+            Checkbox_Border1Visible.IsChecked = true;
+            Checkbox_Border2Visible.IsChecked = true;
         }
 
         private void Checkbox_BorderVisible_Click(object sender, RoutedEventArgs e)

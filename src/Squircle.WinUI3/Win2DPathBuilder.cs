@@ -19,22 +19,33 @@ namespace Squircle.WinUI3
             if (Elements.Count == 0) return null;
 
             using var canvasPathBuilder = new CanvasPathBuilder(resourceCreator);
-            canvasPathBuilder.BeginFigure(0, 0);
 
             var currentPoint = Vector2.Zero;
+            bool started = false;
 
-            foreach (var element in Elements)
+            for (int i = 0; i < Elements.Count; i++)
             {
+                var element = Elements[i];
+
                 if (element is MoveElement moveTo)
                 {
                     if (moveTo.IsRelative) currentPoint += moveTo.MoveTo;
                     else currentPoint = moveTo.MoveTo;
+
+                    if (started) canvasPathBuilder.EndFigure(CanvasFigureLoop.Closed);
+                    canvasPathBuilder.BeginFigure(currentPoint);
+                    started = true;
                 }
                 else if (element is LineElement lineTo)
                 {
                     if (lineTo.IsRelative) currentPoint = lineTo.LineTo;
                     else currentPoint = lineTo.LineTo;
 
+                    if (!started)
+                    {
+                        canvasPathBuilder.BeginFigure(0, 0);
+                        started = true;
+                    }
                     canvasPathBuilder.AddLine(currentPoint);
                 }
                 else if (element is CubicBezierElement cubicBezierTo)
@@ -50,6 +61,11 @@ namespace Squircle.WinUI3
                     }
                     currentPoint = ep;
 
+                    if (!started)
+                    {
+                        canvasPathBuilder.BeginFigure(0, 0);
+                        started = true;
+                    }
                     canvasPathBuilder.AddCubicBezier(cp1, cp2, ep);
                 }
                 else if (element is ArcElement arcTo)
@@ -57,6 +73,11 @@ namespace Squircle.WinUI3
                     if (arcTo.IsRelative) currentPoint += arcTo.EndPoint;
                     else currentPoint = arcTo.EndPoint;
 
+                    if (!started)
+                    {
+                        canvasPathBuilder.BeginFigure(0, 0);
+                        started = true;
+                    }
                     canvasPathBuilder.AddArc(
                         currentPoint,
                         (float)arcTo.RadiusX,
@@ -67,8 +88,12 @@ namespace Squircle.WinUI3
                 }
             }
 
-            canvasPathBuilder.EndFigure(CanvasFigureLoop.Closed);
-            return CanvasGeometry.CreatePath(canvasPathBuilder);
+            if (started)
+            {
+                canvasPathBuilder.EndFigure(CanvasFigureLoop.Closed);
+                return CanvasGeometry.CreatePath(canvasPathBuilder);
+            }
+            return null;
         }
 
     }

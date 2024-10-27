@@ -16,27 +16,33 @@ namespace Squircle.Wpf
         {
             if (Elements.Count == 0) return null;
 
-            var figure = new PathFigure();
-            var pathGeometry = new PathGeometry()
-            {
-                Figures = { figure }
-            };
+            PathFigure? figure = null;
+            var pathGeometry = new PathGeometry();
 
             var currentPoint = Vector2.Zero;
 
-            foreach (var element in Elements)
+            for (int i = 0; i < Elements.Count; i++)
             {
+                var element = Elements[i];
+
                 if (element is MoveElement moveTo)
                 {
                     if (moveTo.IsRelative) currentPoint += moveTo.MoveTo;
                     else currentPoint = moveTo.MoveTo;
+
+                    if (figure != null) pathGeometry.Figures.Add(figure);
+                    figure = new PathFigure()
+                    {
+                        StartPoint = new Point(currentPoint.X, currentPoint.Y),
+                        IsClosed = true
+                    };
                 }
                 else if (element is LineElement lineTo)
                 {
                     if (lineTo.IsRelative) currentPoint = lineTo.LineTo;
                     else currentPoint = lineTo.LineTo;
 
-                    figure.Segments.Add(new LineSegment(new Point(currentPoint.X, currentPoint.Y), isStroked));
+                    (figure ??= new PathFigure() { IsClosed = true }).Segments.Add(new LineSegment(new Point(currentPoint.X, currentPoint.Y), isStroked));
                 }
                 else if (element is CubicBezierElement cubicBezierTo)
                 {
@@ -51,7 +57,7 @@ namespace Squircle.Wpf
                     }
                     currentPoint = ep;
 
-                    figure.Segments.Add(new BezierSegment(
+                    (figure ??= new PathFigure() { IsClosed = true }).Segments.Add(new BezierSegment(
                         new Point(cp1.X, cp1.Y),
                         new Point(cp2.X, cp2.Y),
                         new Point(ep.X, ep.Y),
@@ -62,7 +68,7 @@ namespace Squircle.Wpf
                     if (arcTo.IsRelative) currentPoint += arcTo.EndPoint;
                     else currentPoint = arcTo.EndPoint;
 
-                    figure.Segments.Add(new ArcSegment(
+                    (figure ??= new PathFigure() { IsClosed = true }).Segments.Add(new ArcSegment(
                         new Point(currentPoint.X, currentPoint.Y),
                         new Size(arcTo.RadiusX, arcTo.RadiusY),
                         arcTo.Angle,
@@ -72,8 +78,13 @@ namespace Squircle.Wpf
                 }
             }
 
+            if (figure != null)
+            {
+                pathGeometry.Figures.Add(figure);
+                return pathGeometry;
+            }
 
-            return pathGeometry;
+            return null;
         }
     }
 }
